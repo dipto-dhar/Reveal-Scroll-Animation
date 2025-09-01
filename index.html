@@ -1,227 +1,243 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sequential Slide Reveal</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Test Animation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      overflow-x: hidden;
+    }
 
-      body {
-        font-family: sans-serif;
-        background: #111;
-        overflow-x: hidden;
-      }
+    .color-teal { color:#5d978f; }
+    .color-gray { color:#666; }
+    .color-white { color:#fff; }
+    .color-black { color:#1f1f1f; }
 
-      .parent {
-        position: relative;
-        height: 400vh; /* scroll space */
-      }
+    .reveal { position: relative; width: 100%; }
 
-      .slides-container {
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-      }
+    .slides-container {
+      position: relative;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      contain: layout paint;
+    }
 
-      .slide {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        clip-path: inset(0% 0% 0% 0%);
-      }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+      clip-path: inset(0% 0% 0% 0%);
+      will-change: clip-path;
+    }
 
-      .slide-1 {
-        background: #1f1f1f;
-        z-index: 4;
-      }
-      .slide-2 {
-        background: #5d978f;
-        z-index: 3;
-      }
-      .slide-3 {
-        background: #ffffff;
-        z-index: 2;
-      }
-      .slide-4 {
-        background: #e9f6f6;
-        z-index: 1;
-      }
+    .slide-1 { background:#1f1f1f; z-index:4; }
+    .slide-2 { background:#5d978f; z-index:3; }
+    .slide-3 { background:#ffffff; z-index:2; color:#1f1f1f; }
+    .slide-4 { background:#e9f6f6; z-index:1; color:#1f1f1f; }
 
-      .slide-left,
-      .slide-right {
-        flex: 1;
-        height: 100%;
-      }
+    .slide-left, .slide-right {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+    }
+    .slide-left {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      padding: clamp(20px, 5vw, 48px);
+      justify-content: center;
+    }
+    .slide-left-top { display: flex; flex-direction: column; gap: 16px; }
 
-      .slide-left {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 30px;
-        padding: 40px;
-      }
+    .slide-secondary-title {
+      font-size: 42px;
+      line-height: 1.3;
+      font-weight: bold;
+      letter-spacing: normal;
+    }
+    .slide-title {
+      font-size: 24px;
+      line-height: 1.4;
+      font-weight: normal;
+    }
+    .slide-dsc {
+      font-size: 18px;
+      line-height: 1.6;
+      font-weight: normal;
+    }
 
-      .slide-left-top {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
+    .slide-right { display: flex; align-items: center; overflow: hidden; }
+    .slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: none;
+      will-change: auto;
+    }
 
-      .slide-secondary-title {
-        font-size: 42px;
-        font-weight: bold;
-        line-height: 1.3;
-      }
-      .slide-title {
-        font-size: 24px;
-        line-height: 1.4;
-      }
-      .slide-dsc {
-        font-size: 18px;
-        line-height: 1.6;
-      }
+    @media (max-width: 900px) {
+      .slide { flex-direction: column; justify-content: flex-start; }
+      .slide-left { height: auto; min-height: 48%; padding-block: clamp(20px, 6vw, 40px); }
+      .slide-right { height: 52%; }
+    }
 
-      .slide-right {
-        display: flex;
-        align-items: center;
-      }
-      .slide-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .slide-img { transition: none !important; animation: none !important; }
+    }
 
-      .color-teal {
-        color: #5d978f;
-      }
-      .color-white {
-        color: #ffffff;
-      }
-      .color-black {
-        color: #1f1f1f;
-      }
-      .color-gray {
-        color: #666666;
-      }
+    .vh-pad { height: 100vh; }
 
-      .scroll-spacer {
-        height: 400vh;
-      } /* extra scroll space */
-    </style>
-  </head>
-  <body>
-    <div class="parent">
-      <div class="slides-container">
-        <!-- Slide 1 -->
-        <div class="slide slide-1">
-          <div class="slide-left">
-            <div class="slide-left-top">
-              <h2 class="slide-secondary-title color-teal">売買仲介</h2>
-              <h4 class="slide-title color-white">
-                表参道・青山・原宿に特化した 長年の知識や経験、情報量が強みです
-              </h4>
-            </div>
-            <p class="slide-dsc color-white">
-              世界の投資家から注目される東京・表参道。この地に根ざした当社ならではのネットワークと培った経験をもとに、購入から将来的な売却までワンストップでサポートいたします。
-            </p>
+    .empty-box{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100dvh;
+    }
+  </style>
+</head>
+<body>
+  <div class="vh-pad empty-box" aria-hidden="true">
+    <h2>Scroll to see the animation</h2>
+  </div>
+
+  <section class="reveal" aria-label="Services showcase">
+    <div class="slides-container">
+      <article class="slide slide-1" aria-label="売買仲介">
+        <div class="slide-left">
+          <div class="slide-left-top">
+            <h2 class="slide-secondary-title color-teal">売買仲介</h2>
+            <h4 class="slide-title color-white">
+              表参道・青山・原宿に特化した長<br>年の知識や経験、情報量が強みで
+<br>す
+            </h4>
           </div>
-          <div class="slide-right">
-            <img src="assets/img01.jpg" alt="slider-img" class="slide-img" />
-          </div>
+          <p class="slide-dsc color-white">
+            世界の投資家から注目される東京・表参道。<br>
+この地に根ざした当社ならではのネットワークと<br>
+培った経験をもとに、購入から将来的な売却までワ<br>
+ンストップでサポートいたします。
+          </p>
         </div>
-
-        <!-- Slide 2 -->
-        <div class="slide slide-2">
-          <div class="slide-left">
-            <div class="slide-left-top">
-              <h2 class="slide-secondary-title color-white">賃貸仲介</h2>
-              <h4 class="slide-title color-white">
-                地域密着だから可能な 「旬」な情報をご提供いたします
-              </h4>
-            </div>
-            <p class="slide-dsc color-white">
-              豊富な取引事例から「今」の相場を的確にアドバイスいたします。また、長年の信頼関係により、ビルオーナー様から直接依頼された情報を多数保有しており、立地条件とご予算に応じた優良物件の情報をご提供いたします。
-            </p>
-          </div>
-          <div class="slide-right">
-            <img src="assets/img02.jpg" alt="slider-img" class="slide-img" />
-          </div>
+        <div class="slide-right" aria-hidden="true">
+          <img src="/assets/img01.jpg" alt="" class="slide-img" loading="eager"/>
         </div>
+      </article>
 
-        <!-- Slide 3 -->
-        <div class="slide slide-3">
-          <div class="slide-left">
-            <div class="slide-left-top">
-              <h2 class="slide-secondary-title color-teal">不動産再生</h2>
-              <h4 class="slide-title color-black">
-                自社で不動産を取得から運営まで
-              </h4>
-            </div>
-            <p class="slide-dsc color-black">
-              長年培ってきたノウハウを活かし、リノベーションやコンバージョン行うことで、物件そのものや周辺環境への調和を再定義し、運用しています。
-            </p>
+      <article class="slide slide-2" aria-label="賃貸仲介">
+        <div class="slide-left">
+          <div class="slide-left-top">
+            <h2 class="slide-secondary-title color-white">売買仲介</h2>
+            <h4 class="slide-title color-white">
+              表参道・青山・原宿に特化した長<br>年の知識や経験、情報量が強みで
+<br>す
+            </h4>
           </div>
-          <div class="slide-right">
-            <img src="assets/img03.jpg" alt="slider-img" class="slide-img" />
-          </div>
+          <p class="slide-dsc color-white">
+            世界の投資家から注目される東京・表参道。<br>
+この地に根ざした当社ならではのネットワークと<br>
+培った経験をもとに、購入から将来的な売却までワ<br>
+ンストップでサポートいたします。
+          </p>
         </div>
+        <div class="slide-right" aria-hidden="true">
+          <img src="/assets/img02.jpg" alt="" class="slide-img" loading="lazy"/>
+        </div>
+      </article>
 
-        <!-- Slide 4 -->
-        <div class="slide slide-4">
-          <div class="slide-left">
-            <div class="slide-left-top">
-              <h2 class="slide-secondary-title color-teal">建物管理</h2>
-              <h4 class="slide-title color-black">
-                資産の価値を最大限に引き出す お手伝いならお任せください
-              </h4>
-            </div>
-            <p class="slide-dsc color-gray">
-              テナント募集から建物管理やクレーム対応などの不動産経営に関わる業務を一元対応できる万全の体制を整えています。
-            </p>
+      <article class="slide slide-3" aria-label="不動産再生">
+        <div class="slide-left">
+          <div class="slide-left-top">
+            <h2 class="slide-secondary-title color-teal">売買仲介</h2>
+            <h4 class="slide-title color-black">
+              表参道・青山・原宿に特化した長<br>年の知識や経験、情報量が強みで
+<br>す
+            </h4>
           </div>
-          <div class="slide-right">
-            <img src="assets/img04.jpg" alt="slider-img" class="slide-img" />
-          </div>
+          <p class="slide-dsc color-black">
+            世界の投資家から注目される東京・表参道。<br>
+この地に根ざした当社ならではのネットワークと<br>
+培った経験をもとに、購入から将来的な売却までワ<br>
+ンストップでサポートいたします。
+          </p>
         </div>
-      </div>
+        <div class="slide-right" aria-hidden="true">
+          <img src="/assets/img03.jpg" alt="" class="slide-img" loading="lazy"/>
+        </div>
+      </article>
+
+      <article class="slide slide-4" aria-label="建物管理">
+        <div class="slide-left">
+          <div class="slide-left-top">
+            <h2 class="slide-secondary-title color-teal">売買仲介</h2>
+            <h4 class="slide-title color-black">
+              表参道・青山・原宿に特化した長<br>年の知識や経験、情報量が強みで
+<br>す
+            </h4>
+          </div>
+          <p class="slide-dsc color-gray">
+            世界の投資家から注目される東京・表参道。<br>
+この地に根ざした当社ならではのネットワークと<br>
+培った経験をもとに、購入から将来的な売却までワ<br>
+ンストップでサポートいたします。
+          </p>
+        </div>
+        <div class="slide-right" aria-hidden="true">
+          <img src="/assets/img04.jpg" alt="" class="slide-img" loading="lazy"/>
+        </div>
+      </article>
     </div>
+  </section>
 
-    <div class="scroll-spacer"></div>
+  <div class="vh-pad empty-box" aria-hidden="true">
+    <h2>Thank you</h2>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReduced) return;
+
       gsap.registerPlugin(ScrollTrigger);
 
-      const slides = document.querySelectorAll(".slide");
+      const slidesContainer = document.querySelector(".slides-container");
+      const slides = gsap.utils.toArray(".slide");
 
-      slides.forEach((slide, i) => {
-        if (i < slides.length - 1) {
-          gsap.to(slide, {
-            clipPath: "inset(0% 0% 100% 0%)",
-            ease: "none",
-            scrollTrigger: {
-              trigger: ".slides-container",
-              start: `${i * 25}% top`,
-              end: `${(i + 1) * 25}% top`,
-              scrub: 2,
-              pin: true, // pin container during scroll
-            },
-          });
+      gsap.set([".slide-left", ".slide-img"], { clearProps: "transform,opacity" });
+
+      const tl = gsap.timeline({
+        defaults: { ease: "none", duration: 1 },
+        scrollTrigger: {
+          trigger: slidesContainer,
+          start: "top top",
+          end: () => "+=" + (window.innerHeight * (slides.length - 1) * 1.25),
+          scrub: 1.2,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true
         }
       });
-    </script>
-  </body>
+
+      slides.slice(0, -1).forEach((slide) => {
+        tl.to(slide, { clipPath: "inset(0% 0% 100% 0%)" }, ">");
+      });
+
+      const ro = new ResizeObserver(() => ScrollTrigger.refresh());
+      ro.observe(document.documentElement);
+    });
+  </script>
+</body>
 </html>
